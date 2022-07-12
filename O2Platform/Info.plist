@@ -180,7 +180,7 @@
 		<key>centerHost</key>
 		<string>qywx.o2oa.net</string>
 		<key>centerPort</key>
-		<real>20030</real>
+		<integer>20030</integer>
 		<key>httpProtocol</key>
 		<string>http</string>
 		<key>id</key>

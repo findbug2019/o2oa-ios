@@ -236,10 +236,13 @@ extension O2AppViewController:ZLCollectionViewDelegate{
                     if storyBoardName == "cloudStorage" {
                         storyBoardName = "CloudFile"
                     }
-                    ////
                     let storyBoard = UIStoryboard(name: storyBoardName!, bundle: nil)
                     var destVC:UIViewController!
-                    if let vcname = app.vcName,vcname.isEmpty == false {
+                    /// 云盘v3版本 入口换了
+                    if let value = StandDefaultUtil.share.userDefaultGetValue(key: O2.O2CloudFileVersionKey) as? Bool, value == true, storyBoardName == "CloudFile" {
+                        destVC = storyBoard.instantiateViewController(withIdentifier: "cloudFileV3") // v3 入口
+                        DDLogDebug("网盘V3版本")
+                    } else if let vcname = app.vcName,vcname.isEmpty == false {
                         destVC = storyBoard.instantiateViewController(withIdentifier: app.vcName!)
                     }else{
                         destVC = storyBoard.instantiateInitialViewController()
@@ -258,7 +261,6 @@ extension O2AppViewController:ZLCollectionViewDelegate{
                     }
                     destVC.modalPresentationStyle = .fullScreen
                     if destVC.isKind(of: ZLNavigationController.self) {
-                        DDLogInfo("cloudFIle 进来了？")
                         self.show(destVC, sender: nil)
                     }else{
                         self.navigationController?.pushViewController(destVC, animated: true)

@@ -27,6 +27,13 @@ class CloudFileBaseVC: UIViewController {
     //选中的文件列表
     var checkedFileList: [OOAttachment] = []
     
+    
+    //选中的文件夹列表
+    var checkedV3FolderList: [OOFolderV3] = []
+    //选中的文件列表
+    var checkedV3FileList: [OOAttachmentV3] = []
+    
+    
     //重新加载数据 子类各自实现
     func loadListData() {
         
@@ -180,11 +187,55 @@ class CloudFileBaseVC: UIViewController {
         }
     }
     
+    // 企业网盘 工作共享区内的 文件查看
+    func clickFileV3(file: OOAttachmentV3)  {
+        if let type = file.type {
+            switch type {
+            case "image":
+                self.previewFileV3(fileId: file.id!)
+                break
+            case "office":
+                self.previewFileV3(fileId: file.id!)
+                break
+            case "music":
+                self.playAudioV3(fileId: file.id!)
+                break
+            case "movie":
+                self.playMovieV3(fileId: file.id!)
+                break
+            case "other":
+                self.previewFileV3(fileId: file.id!)
+                break
+            default:
+                self.previewFileV3(fileId: file.id!)
+                break
+            }
+        }else {
+            self.previewFileV3(fileId: file.id!)
+        }
+    }
+    
     /// 播放音频
     func playAudio(fileId: String) {
         self.showLoading()
         O2CloudFileManager.shared
             .getFileUrl(fileId: fileId)
+            .always {
+                self.hideLoading()
+            }.then { (path) in
+                let currentURL = URL(fileURLWithPath: path.path)
+                do {
+                    let data = try Data(contentsOf: currentURL)
+                    AudioPlayerManager.shared.managerAudioWithData(data, toplay: true)
+                } catch {
+                    DDLogError(error.localizedDescription)
+                }
+            }
+    }
+    func playAudioV3(fileId: String) {
+        self.showLoading()
+        O2CloudFileManager.shared
+            .getFileUrlAttachment3(fileId: fileId)
             .always {
                 self.hideLoading()
             }.then { (path) in
@@ -216,12 +267,54 @@ class CloudFileBaseVC: UIViewController {
                 self.presentVC(avVC)
             }
     }
+    func playMovieV3(fileId: String) {
+        self.showLoading()
+        O2CloudFileManager.shared
+            .getFileUrlAttachment3(fileId: fileId)
+            .always {
+                self.hideLoading()
+            }.then { (path) in
+                let currentURL = URL(fileURLWithPath: path.path)
+                DDLogDebug(currentURL.description)
+                DDLogDebug(path.path)
+                let avPlayer = AVPlayer(url: currentURL)
+                let avVC = AVPlayerViewController()
+                avVC.player = avPlayer
+                self.presentVC(avVC)
+            }
+    }
     
     /// 预览文件
     func previewFile(fileId: String) {
         self.showLoading()
         O2CloudFileManager.shared
             .getFileUrl(fileId: fileId)
+            .always {
+                self.hideLoading()
+            }
+            .then { (path) in
+                let currentURL = NSURL(fileURLWithPath: path.path)
+                DDLogDebug(currentURL.description)
+                DDLogDebug(path.path)
+                if QLPreviewController.canPreview(currentURL) {
+                    self.previewVC.currentFileURLS.removeAll()
+                    self.previewVC.currentFileURLS.append(currentURL)
+                    self.previewVC.reloadData()
+                    self.pushVC(self.previewVC)
+                }else {
+                    self.showError(title: "当前文件类型不支持预览！")
+                }
+            }
+            .catch { (error) in
+                DDLogError(error.localizedDescription)
+                self.showError(title: "获取文件异常！")
+        }
+    }
+    
+    func previewFileV3(fileId: String) {
+        self.showLoading()
+        O2CloudFileManager.shared
+            .getFileUrlAttachment3(fileId: fileId)
             .always {
                 self.hideLoading()
             }

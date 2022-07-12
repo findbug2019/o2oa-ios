@@ -40,16 +40,20 @@ class O2BaseJsMessageHandler: NSObject, O2WKScriptMessageHandlerImplement {
             break
         case "ReplyAction":
             DDLogDebug("回复 帖子 message.body = \(message.body)")
-            let pId : String?
-            if message.body is NSDictionary {
-                let parentId:NSDictionary = message.body as! NSDictionary
-                pId = parentId["body"] as? String
-            }else if message.body is NSString {
-                pId = String(message.body as! NSString)
-            }else {
-                pId = nil
+            if !O2AuthSDK.shared.isBBSMute() {
+                let pId : String?
+                if message.body is NSDictionary {
+                    let parentId:NSDictionary = message.body as! NSDictionary
+                    pId = parentId["body"] as? String
+                }else if message.body is NSString {
+                    pId = String(message.body as! NSString)
+                }else {
+                    pId = nil
+                }
+                self.viewController.performSegue(withIdentifier: "showReplyActionSegue", sender: pId)
+            } else {
+                DDLogError("当前用户已被禁言！")
             }
-            self.viewController.performSegue(withIdentifier: "showReplyActionSegue", sender: pId)
             break
         case "openO2Work":
             DDLogDebug("打开工作界面。。。。。")
@@ -293,7 +297,7 @@ class O2BaseJsMessageHandler: NSObject, O2WKScriptMessageHandlerImplement {
                     let options = PHImageRequestOptions()
                     options.isSynchronous = true
                     options.deliveryMode = .fastFormat
-                    options.resizeMode = .none
+                    options.resizeMode = .fast //.none
                     var fName = (asset.value(forKey: "filename") as? String) ?? "untitle.png"
                     // 判断是否是heif
                     var isHEIF = false

@@ -21,9 +21,9 @@ extension WorkViewModel {
     
     
     /// 分页查询待办列表
-    func taskListNext(lastId: String) -> Promise<[TodoCellModel<TodoTaskData>]> {
+    func taskListNext(lastId: String, key: String) -> Promise<[TodoCellModel<TodoTaskData>]> {
         return Promise{ fulfill, reject in
-            self.api.request(.taskListNext(lastId, self.pageCount), completion: {result in
+            self.api.request(.taskListNextFilter(lastId, self.pageCount, key), completion: {result in
                 let response = OOResult<BaseModelClass<[TodoTaskData]>>(result)
                 if response.isResultSuccess() {
                     if let list = response.model?.data {
@@ -65,9 +65,9 @@ extension WorkViewModel {
         }
     }
     /// 待阅
-    func readListNext(lastId: String) -> Promise<[TodoCellModel<TodoTaskData>]> {
+    func readListNext(lastId: String, key: String) -> Promise<[TodoCellModel<TodoTaskData>]> {
         return Promise{ fulfill, reject in
-            self.api.request(.readListNext(lastId, self.pageCount), completion: {result in
+            self.api.request(.readListNextFilter(lastId, self.pageCount, key), completion: {result in
                 let response = OOResult<BaseModelClass<[TodoTaskData]>>(result)
                 if response.isResultSuccess() {
                     if let list = response.model?.data {
@@ -87,9 +87,9 @@ extension WorkViewModel {
         }
     }
     /// 已阅
-    func readcompletedListNext(lastId: String) -> Promise<[TodoCellModel<TodoTaskData>]> {
+    func readcompletedListNext(lastId: String, key: String) -> Promise<[TodoCellModel<TodoTaskData>]> {
         return Promise{ fulfill, reject in
-            self.api.request(.readcompletedListNext(lastId, self.pageCount), completion: {result in
+            self.api.request(.readcompletedListNextFilter(lastId, self.pageCount, key), completion: {result in
                 let response = OOResult<BaseModelClass<[TodoTaskData]>>(result)
                 if response.isResultSuccess() {
                     if let list = response.model?.data {
@@ -272,7 +272,7 @@ extension WorkViewModel {
     
     /// 下载附件
     private func downloadAttachmentWithWorkId(id: String, workId: String, info: O2WorkAttachmentInfo) -> Promise<URL> {
-        let path = FileUtil.share.cacheDir().appendingPathComponent("\(info.name ?? "temp").\(info.extension ?? "")")
+        let path = FileUtil.share.cacheDir().appendingPathComponent("\(info.id ?? "noId")").appendingPathComponent("\(info.name ?? "temp").\(info.extension ?? "")")
         DDLogDebug("file Path: \(path)")
         if FileUtil.share.fileExist(filePath: path.path) {
             if let updateTime = info.updateTime,  let updateDate = Date.date(updateTime), let fileDate = FileUtil.share.fileModificationDate(filePath: path.path) as Date? {
@@ -282,7 +282,7 @@ extension WorkViewModel {
                         self.api.request(.attachmentDownloadWithWorkId(id, workId, path), completion: { result in
                             switch result {
                                 case .success(_):
-                                    DDLogError("重新下载成功。。。。。")
+                                    DDLogDebug("重新下载成功。。。。。")
                                     fulfill(path)
                                     break
                                 case .failure(let err):
@@ -303,7 +303,7 @@ extension WorkViewModel {
                 self.api.request(.attachmentDownloadWithWorkId(id, workId, path), completion: { result in
                     switch result {
                         case .success(_):
-                            DDLogError("下载成功。。。。。")
+                            DDLogDebug("下载成功。。。。。")
                             fulfill(path)
                             break
                         case .failure(let err):
@@ -318,7 +318,7 @@ extension WorkViewModel {
     
     /// 下载附件
     private func downloadAttachmentWithWorkcompleted(id: String, workcompleted: String, info: O2WorkAttachmentInfo) -> Promise<URL> {
-        let path = FileUtil.share.cacheDir().appendingPathComponent("\(info.name ?? "temp").\(info.extension ?? "")")
+        let path = FileUtil.share.cacheDir().appendingPathComponent("\(info.id ?? "noId")").appendingPathComponent("\(info.name ?? "temp").\(info.extension ?? "")")
         DDLogDebug("file Path: \(path)")
         if FileUtil.share.fileExist(filePath: path.path) {
             if let updateTime = info.updateTime,  let updateDate = Date.date(updateTime), let fileDate = FileUtil.share.fileModificationDate(filePath: path.path) as Date? {
